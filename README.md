@@ -2,6 +2,10 @@
 
 Este proyecto es una simulación 3D de un brazo robótico utilizando la biblioteca Babylon.js. Proporciona una representación visual interactiva de un brazo robótico con varios componentes. Puedes utilizar este README para obtener información sobre cómo configurar y ejecutar el proyecto.
 
+![Captura de Pantalla 1](1.png)
+![Captura de Pantalla 2](2.png)
+![Captura de Pantalla 3](3.png)
+
 ## Contenido
 
 - [Requisitos](#requisitos)
