@@ -6,7 +6,7 @@ Este proyecto es una simulación 3D de un brazo robótico utilizando la bibliote
 
 ## Demostración en vivo
 
-Puedes ver la demostración en vivo [aquí]([enlace-a-la-demo](https://codepen.io/ronald_avendano/pen/vYvgBWm)).
+Puedes ver la demostración en vivo [aquí](https://codepen.io/ronald_avendano/pen/vYvgBWm).
 
 ## Contenido
 
