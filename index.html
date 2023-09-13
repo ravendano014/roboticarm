@@ -19,12 +19,17 @@
     </style>
 </head>
 <body>
+    <video id="video" width="640" height="480" style="display:none;" autoplay></video>
     <canvas id="renderCanvas"></canvas>
+    <button id="toggleButton">Toggle Camera</button>
+    <p id="handStatus">Hand Status: -</p>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script src="https://cdn.babylonjs.com/gui/babylon.gui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handtrackjs@latest/dist/handtrack.min.js"></script>
     <script>
    // Configuración de la escena
+const handStatus = document.getElementById('handStatus');
 var canvas = document.getElementById("renderCanvas");
 var engine = new BABYLON.Engine(canvas, true);
 var scene = new BABYLON.Scene(engine);
@@ -545,31 +550,82 @@ routineButton.onPointerUpObservable.add(function () {
 });
 UiPanel.addControl(routineButton);
 
-function executeRoutine(){
-var index = 0;
-    var interval = setInterval(function () {
-        if (index >= servoRotations.length) {
-            clearInterval(interval);
-            return;
-        }
+// Función para ejecutar una rutina de movimientos de servos
+function executeRoutine() {
 
-        var servoData = servoRotations[index];
-        var servoName = servoData.servo;
-        var rotation = servoData.rotation;
+    for (var i = 0; i < servoRotations.length; i++) {
+        var movimiento = servoRotations[i];
+        aplicarMovimiento(movimiento.servo, movimiento.rotation);
+    }
 
-        // Buscar el servo correspondiente por nombre
-        var servo = scene.getMeshByName(servoName);
-
-        if (servo) {
-            servo.rotation.x = rotation.x;
-            servo.rotation.y = rotation.y;
-            servo.rotation.z = rotation.z;
-        }
-
-        index++;
-    }, 500); // Cambia este valor para ajustar la velocidad de reproducción
 }
 
+
+// Función para aplicar un movimiento a un servo específico
+function aplicarMovimiento(servoNombre, rotacion) {
+    var servo = scene.getMeshByName(servoNombre); // Obtener el servo por su nombre
+
+    if (servo) {
+        // Aplicar la rotación al servo
+        servo.rotation.x = rotacion.x;
+        servo.rotation.y = rotacion.y;
+        servo.rotation.z = rotacion.z;
+    } else {
+        console.warn("El servo '" + servoNombre + "' no fue encontrado en la escena.");
+    }
+}
+
+
+
+/*
+// Función para ejecutar la rutina
+function executeRoutine() {
+    // Iterar a través de los datos almacenados en el arreglo
+    for (var i = 0; i < servoRotations.length; i++) {
+        var rotationData = servoRotations[i];
+
+        //for (var i = 0; i < servoRotations.length; i++) {
+        //    var rotationData = servoRotations[i];
+        //
+        // Ejemplo de uso: rotar servo01 en el eje X hacia un valor de detención con una velocidad de rotationSpeed
+        //    rotateServoIncrementally(servo01, 'x', rotationSpeed, 'clockwise', servoRotations[i].servo01RotationX); 
+        //    rotateServoIncrementally(servo02, 'x', rotationSpeed, 'clockwise', servoRotations[i].servo02RotationX); 
+        //    rotateServoIncrementally(servo03, 'z', rotationSpeed, 'clockwise', servoRotations[i].servo03RotationZ); 
+        //    rotateServoIncrementally(servo04, 'x', rotationSpeed, 'clockwise', servoRotations[i].servo04RotationX); 
+        //    rotateServoIncrementally(servo05, 'z', rotationSpeed, 'clockwise', servoRotations[i].servo05RotationZ); 
+        //}
+        
+
+        // Aplicar las rotaciones almacenadas a los servos en cada iteración
+        servo01.rotation.x = rotationData.servo01RotationX;
+        servo01.rotation.y = rotationData.servo01RotationY;
+        servo01.rotation.z = rotationData.servo01RotationZ;
+
+        servo02.rotation.x = rotationData.servo02RotationX;
+        servo02.rotation.y = rotationData.servo02RotationY;
+        servo02.rotation.z = rotationData.servo02RotationZ;
+
+        servo03.rotation.x = rotationData.servo03RotationX;
+        servo03.rotation.y = rotationData.servo03RotationY;
+        servo03.rotation.z = rotationData.servo03RotationZ;
+
+        servo04.rotation.x = rotationData.servo04RotationX;
+        servo04.rotation.y = rotationData.servo04RotationY;
+        servo04.rotation.z = rotationData.servo04RotationZ;
+
+        servo05.rotation.x = rotationData.servo05RotationX;
+        servo05.rotation.y = rotationData.servo05RotationY;
+        servo05.rotation.z = rotationData.servo05RotationZ;
+
+        setTimeout(() => {
+        console.log("Delayed for 1 second.");
+        }, "1000");
+
+        // Puedes agregar lógica adicional aquí si es necesario
+
+    }
+}
+*/
 
 // Agregar una variable para controlar el estado de la rutina
 var isRoutineRunning = false;
@@ -612,6 +668,8 @@ function performRoutine() {
             rotateServo(servo04, 0);
         }
 
+
+
         if(i>30 && i<60){
             rotateServo(servo01, 1);
         }
@@ -630,6 +688,40 @@ function performRoutine() {
         }
 
         i++;
+
+/*
+    // Iterar a través de cada objeto en servoRotations
+    servoRotations.forEach(function (servoRotation) {
+        var servoName = servoRotation.servo;
+        var servo = window[servoName]; // Acceder al objeto servo por su nombre
+
+        if (servo) {
+            // Obtener la rotación deseada para el servo
+            var targetRotation = servoRotation.rotation;
+
+            // Iterar a través de los ejes X, Y y Z
+            for (var axis in targetRotation) {
+                if (targetRotation.hasOwnProperty(axis)) {
+                    // Obtener el valor de destino para el eje actual
+                    var targetValue = targetRotation[axis];
+
+                    // Determinar la dirección de rotación (incremento o decremento)
+                    var directionFactor = servo.rotation[axis] < targetValue ? 1 : -1;
+
+                    rotateServo(servo, directionFactor);
+
+                    console.log(servoName);
+                    console.log(directionFactor);
+                    console.log(axis);
+                    console.log(targetValue);
+                    
+                }
+            }
+        } else {
+            console.error('El servo ' + servoName + ' no está definido.');
+        }
+    });
+    */
 
         // Establecer un intervalo de tiempo entre movimientos (en milisegundos)
         setTimeout(performRoutine, 100); // Puedes ajustar el intervalo según tus necesidades
@@ -675,6 +767,150 @@ function rotateServo(servo, vector) {
     }
 
 }
+
+// Función para rotar un servo en un eje específico en incrementos progresivos hasta un valor de detención
+function rotateServoIncrementally(servo, axis, increment, direction, stopValue) {
+    var rotation = servo.rotation[axis]; // Obtener el valor actual del eje
+    
+    console.log(servo.rotation[axis]);
+    
+    var intervalId;
+    var directionFactor = direction === "clockwise" ? 1 : -1; // Factor de dirección
+
+    // Determinar la dirección de rotación en función de stopValue
+    if ((direction === "clockwise" && stopValue < rotation) ||
+        (direction === "counterclockwise" && stopValue > rotation)) {
+        directionFactor *= -1; // Cambiar la dirección si es necesario
+    }
+
+    // Función para rotar el servo en incrementos progresivos
+    function rotate() {
+        rotation += increment * directionFactor;
+        servo.rotation[axis] = rotation;
+
+        // Determinar si se alcanzó el valor de detención
+        if ((direction === "clockwise" && rotation >= stopValue) ||
+            (direction === "counterclockwise" && rotation <= stopValue)) {
+            clearInterval(intervalId);
+        }
+    }
+
+    console.log(servo.rotation[axis]);
+
+    // Iniciar la rotación gradual con un temporizador
+    intervalId = setInterval(rotate, 16); // 60 FPS
+}
+
+       // Inicializar handtrack.js
+       const modelParams = {
+            flipHorizontal: true,
+            maxNumBoxes: 1,
+            iouThreshold: 0.5,
+            scoreThreshold: 0.7,
+        };
+
+        let isCameraOn = false;
+
+        handTrack.load(modelParams).then(model => {
+            console.log('Modelo cargado exitosamente');
+            detectHand(model);
+        });
+
+        function detectHand(model) {
+            navigator.getUserMedia(
+                { video: {} },
+                stream => {
+                    video.srcObject = stream;
+                    setInterval(async () => {
+                        try {
+                            const predictions = await model.detect(video);
+
+                            if (predictions.length > 0) {
+                                const hand = predictions[0].bbox;
+                                const centerX = hand[0] + hand[2] / 2;
+                                const centerY = hand[1] + hand[3] / 2;
+
+                                // Mueve el objeto en pantalla según el movimiento de la mano
+                                console.log('x: '+centerX);
+                                console.log('y: '+centerY);
+                                umbralTopX = 280;
+                                umbralBottomX = 180;
+                                umbralTopY = 230;
+                                umbralBottomY = 170;
+
+                                // Calcula la distancia entre los dedos (ancho de la mano)
+                                const handWidth = hand[2];
+
+                                // Define un umbral para determinar si la mano está abierta o cerrada
+                                const handOpenThreshold = 50;
+
+                                if (handWidth > handOpenThreshold) {
+                                    handStatus.textContent = 'Hand Status: Open';
+                                } else {
+                                    handStatus.textContent = 'Hand Status: Closed';
+                                }
+
+                                if(centerX>umbralBottomX && centerX<umbralTopX){
+                                    if(centerX>255.53){
+                                        servo01.rotation.x -= rotationSpeed; 
+                                    } else {
+                                        servo01.rotation.x += rotationSpeed; 
+                                    }
+                                }
+
+                                if(centerY>umbralBottomY && centerY<umbralTopY){
+                                    if(centerY>205.53){
+                                        servo02.rotation.x += rotationSpeed; 
+                                    } else {
+                                        servo02.rotation.x -= rotationSpeed;
+                                    }
+                                }
+                            }
+
+                        } catch (error) {
+                            // Manejar el error aquí
+                            //console.error('Se produjo un error al realizar la detección:', error);
+                        }
+                    }, 100);
+                },
+                error => console.error('Error al acceder a la cámara:', error)
+            );
+        }
+
+        toggleButton.addEventListener('click', () => {
+            if (!isCameraOn) {
+                startCamera();
+            } else {
+                stopCamera();
+            }
+        });
+
+        function startCamera() {
+            navigator.getUserMedia(
+                { video: {} },
+                stream => {
+                    video.srcObject = stream;
+                    isCameraOn = true;
+                    toggleButton.textContent = 'Turn Off Camera';
+                    if(model){
+                        detectHand(model);
+                    }
+                },
+                error => console.error('Error al acceder a la cámara:', error)
+            );
+        }
+
+        function stopCamera() {
+            const stream = video.srcObject;
+            if (stream) {
+                const tracks = stream.getTracks();
+                tracks.forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            isCameraOn = false;
+            toggleButton.textContent = 'Turn On Camera';
+        }
+
         
 // Manejo de redimensionamiento de la ventana
 window.addEventListener("resize", function () {
