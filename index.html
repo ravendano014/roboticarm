@@ -16,32 +16,51 @@
             padding: 5px;
             border-radius: 5px;
         }
+        .canvasbox {
+            border-radius: 3px;
+            margin-right: 10px;
+            width: 225px;
+            height: 159px;
+            border-bottom: 3px solid #0063FF;
+            box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.2), 0 4px 10px 0 #00000030;
+        background: #333;
+
+        }
     </style>
 </head>
 <body>
-    <video id="video" width="640" height="480" style="display:none;" autoplay></video>
-    <canvas id="renderCanvas"></canvas>
-    <button id="toggleButton">Toggle Camera</button>
-    <p id="handStatus">Hand Status: -</p>
+    <video class="canvasbox" autoplay="autoplay" id="myvideo" style="display:none;"></video>
+
+
+    <div style="position: relative;">
+        <canvas id="renderCanvas"></canvas>
+        <canvas id="canvas" class="canvasbox" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+    </div>
+
+    <button onclick="toggleVideo()" id="trackbutton" class="bx--btn bx--btn--secondary" type="button">
+        Toggle Video
+      </button>
+      <div id="updatenote" class="updatenote mt10"> loading model ..</div>
+      <p id="handStatus">Hand Status: -</p>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script src="https://cdn.babylonjs.com/gui/babylon.gui.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/handtrackjs@latest/dist/handtrack.min.js"></script>
     <script>
    // Configuración de la escena
-const handStatus = document.getElementById('handStatus');
-var canvas = document.getElementById("renderCanvas");
-var engine = new BABYLON.Engine(canvas, true);
-var scene = new BABYLON.Scene(engine);
-var camera = new BABYLON.ArcRotateCamera(
-            "Camera",
-            Math.PI/1.33,
-            0.9,
-            15,
-            new BABYLON.Vector3(-160, 360, 160),
-            scene
-        );
-camera.attachControl(canvas, true);
+    const canvas = document.getElementById("canvas");
+    var canvas2 = document.getElementById("renderCanvas");
+    var engine = new BABYLON.Engine(canvas2, true);
+    var scene = new BABYLON.Scene(engine);
+    var camera = new BABYLON.ArcRotateCamera(
+                "Camera",
+                Math.PI/1.33,
+                0.9,
+                15,
+                new BABYLON.Vector3(-160, 360, 160),
+                scene
+            );
+camera.attachControl(canvas2, true);
 var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
 // Importar el modelo STL
@@ -802,115 +821,139 @@ function rotateServoIncrementally(servo, axis, increment, direction, stopValue) 
 }
 
        // Inicializar handtrack.js
-       const modelParams = {
-            flipHorizontal: true,
-            maxNumBoxes: 1,
-            iouThreshold: 0.5,
-            scoreThreshold: 0.7,
-        };
+       const handStatus = document.getElementById('handStatus');
+       const context = canvas.getContext("2d");
+       const video = document.getElementById("myvideo");
+       let trackButton = document.getElementById("trackbutton");
+       let updateNote = document.getElementById("updatenote");
 
-        let isCameraOn = false;
+let isVideo = false;
+let model = null;
 
-        handTrack.load(modelParams).then(model => {
-            console.log('Modelo cargado exitosamente');
-            detectHand(model);
-        });
+const modelParams = {
+    flipHorizontal: true,   // flip e.g for video  
+    maxNumBoxes: 20,        // maximum number of boxes to detect
+    iouThreshold: 0.5,      // ioU threshold for non-max suppression
+    scoreThreshold: 0.6,    // confidence threshold for predictions.
+}
 
-        function detectHand(model) {
-            navigator.getUserMedia(
-                { video: {} },
-                stream => {
-                    video.srcObject = stream;
-                    setInterval(async () => {
-                        try {
-                            const predictions = await model.detect(video);
+function startVideo() {
+    handTrack.startVideo(video).then(function (status) {
+        console.log("video started", status);
+        if (status) {
+            updateNote.innerText = "Video started. Now tracking"
+            isVideo = true
+            runDetection()
+        } else {
+            updateNote.innerText = "Please enable video"
+        }
+    });
+}
 
-                            if (predictions.length > 0) {
-                                const hand = predictions[0].bbox;
-                                const centerX = hand[0] + hand[2] / 2;
-                                const centerY = hand[1] + hand[3] / 2;
+function toggleVideo() {
+    if (!isVideo) {
+        updateNote.innerText = "Starting video"
+        startVideo();
+    } else {
+        updateNote.innerText = "Stopping video"
+        handTrack.stopVideo(video)
+        isVideo = false;
+        updateNote.innerText = "Video stopped"
+    }
+}
 
-                                // Mueve el objeto en pantalla según el movimiento de la mano
-                                console.log('x: '+centerX);
-                                console.log('y: '+centerY);
-                                umbralTopX = 280;
-                                umbralBottomX = 180;
-                                umbralTopY = 230;
-                                umbralBottomY = 170;
 
-                                // Calcula la distancia entre los dedos (ancho de la mano)
-                                const handWidth = hand[2];
-
-                                // Define un umbral para determinar si la mano está abierta o cerrada
-                                const handOpenThreshold = 50;
-
-                                if (handWidth > handOpenThreshold) {
-                                    handStatus.textContent = 'Hand Status: Open';
-                                } else {
-                                    handStatus.textContent = 'Hand Status: Closed';
-                                }
-
-                                if(centerX>umbralBottomX && centerX<umbralTopX){
-                                    if(centerX>255.53){
-                                        servo01.rotation.x -= rotationSpeed; 
-                                    } else {
-                                        servo01.rotation.x += rotationSpeed; 
-                                    }
-                                }
-
-                                if(centerY>umbralBottomY && centerY<umbralTopY){
-                                    if(centerY>205.53){
-                                        servo02.rotation.x += rotationSpeed; 
-                                    } else {
-                                        servo02.rotation.x -= rotationSpeed;
-                                    }
-                                }
-                            }
-
-                        } catch (error) {
-                            // Manejar el error aquí
-                            //console.error('Se produjo un error al realizar la detección:', error);
-                        }
-                    }, 100);
-                },
-                error => console.error('Error al acceder a la cámara:', error)
-            );
+function runDetection() {
+    model.detect(video).then(predictions => {
+        console.log("Predictions: ", predictions);
+        model.renderPredictions(predictions, canvas, context, video);
+        if (isVideo) {
+            requestAnimationFrame(runDetection);
         }
 
-        toggleButton.addEventListener('click', () => {
-            if (!isCameraOn) {
-                startCamera();
+       
+        if (predictions.length > 0) {
+            const hand = predictions[0].bbox;
+            handstate = predictions[0].label;
+            console.log(handstate);
+            const centerX = hand[0] + hand[2] / 2;
+            const centerY = hand[1] + hand[3] / 2;
+
+            // Mueve el objeto en pantalla según el movimiento de la mano
+            console.log('x: '+centerX);
+            console.log('y: '+centerY);
+            umbralTopX = 400;
+            umbralBottomX = 100;
+            umbralTopY = 400;
+            umbralBottomY = 100;
+
+            // Calcula la distancia entre los dedos (ancho de la mano)
+            const handWidth = hand[2];
+
+            // Define un umbral para determinar si la mano está abierta o cerrada
+            const handOpenThreshold = 50;
+            /*
+            if (handWidth > handOpenThreshold) {
+                handStatus.textContent = 'Hand Status: Open';
             } else {
-                stopCamera();
+                handStatus.textContent = 'Hand Status: Closed';
             }
-        });
+            */
 
-        function startCamera() {
-            navigator.getUserMedia(
-                { video: {} },
-                stream => {
-                    video.srcObject = stream;
-                    isCameraOn = true;
-                    toggleButton.textContent = 'Turn Off Camera';
-                    if(model){
-                        detectHand(model);
+            if(handstate == 'closed'){
+                servo05.rotation.z -= rotationSpeed;
+                gearl.rotation.z -= rotationSpeed;
+                gearr.rotation.z += rotationSpeed;
+                handStatus.textContent = 'Hand Status: Closed';
+            } else if(handstate == 'open'){
+                if(centerX>(umbralBottomX/2) && centerX<(umbralTopX/2)){
+                    servo05.rotation.z += rotationSpeed;
+                    gearr.rotation.z -= rotationSpeed;
+                    gearl.rotation.z += rotationSpeed;
+                }
+                handStatus.textContent = 'Hand Status: Open';
+                
+                    if(centerX>umbralBottomX && centerX<umbralTopX){
+                        if(centerX>250){
+                            servo01.rotation.x -= rotationSpeed; 
+                        } else {
+                            servo01.rotation.x += rotationSpeed; 
+                        }
                     }
-                },
-                error => console.error('Error al acceder a la cámara:', error)
-            );
-        }
 
-        function stopCamera() {
-            const stream = video.srcObject;
-            if (stream) {
-                const tracks = stream.getTracks();
-                tracks.forEach(track => track.stop());
-                video.srcObject = null;
+                    if(centerY>umbralBottomY && centerY<umbralTopY){
+                        if(centerY>250){
+                            servo02.rotation.x += rotationSpeed; 
+                        } else {
+                            servo02.rotation.x -= rotationSpeed;
+                        }
+                    }
             }
-            isCameraOn = false;
-            toggleButton.textContent = 'Turn On Camera';
+            
+            if(centerX>umbralBottomX && centerX<umbralTopX && handstate == 'face'){
+                if(centerX>320){
+                    servo03.rotation.z -= rotationSpeed; 
+                } else {
+                    servo03.rotation.z += rotationSpeed; 
+                }
+            }
+
+
         }
 
+
+    });
+
+    
+}
+
+// Load the model.
+handTrack.load(modelParams).then(lmodel => {
+    // detect objects in the image.
+    model = lmodel
+    updateNote.innerText = "Loaded Model!"
+    trackButton.disabled = false
+});
         
 // Manejo de redimensionamiento de la ventana
 window.addEventListener("resize", function () {
@@ -920,3 +963,4 @@ window.addEventListener("resize", function () {
     </script>
 </body>
 </html>
+
