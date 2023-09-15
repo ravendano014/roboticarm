@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Brazo Robótico</title>
+    <style>
+        canvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+        .label {
+            position: absolute;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .canvasbox {
+            border-radius: 3px;
+            margin-right: 10px;
+            width: 225px;
+            height: 159px;
+            border-bottom: 3px solid #0063FF;
+            box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.2), 0 4px 10px 0 #00000030;
+        background: #333;
+
+        }
+    </style>
+</head>
+<body>
+    <video class="canvasbox" autoplay="autoplay" id="myvideo" style="display:none;"></video>
+
+
+    <div style="position: relative;">
+        <canvas id="renderCanvas"></canvas>
+        <canvas id="canvas" class="canvasbox" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+    </div>
+
+    <button onclick="toggleVideo()" id="trackbutton" class="bx--btn bx--btn--secondary" type="button">
+        Toggle Video
+      </button>
+      <div id="updatenote" class="updatenote mt10"> loading model ..</div>
+      <p id="handStatus">Hand Status: -</p>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script src="https://cdn.babylonjs.com/gui/babylon.gui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handtrackjs@latest/dist/handtrack.min.js"></script>
+    <script>
+   // Configuración de la escena
+    const canvas = document.getElementById("canvas");
+    var canvas2 = document.getElementById("renderCanvas");
+    var engine = new BABYLON.Engine(canvas2, true);
+    var scene = new BABYLON.Scene(engine);
+    var camera = new BABYLON.ArcRotateCamera(
+                "Camera",
+                Math.PI/1.33,
+                0.9,
+                15,
+                new BABYLON.Vector3(-160, 360, 160),
+                scene
+            );
+camera.attachControl(canvas2, true);
+var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+// Importar el modelo STL
+BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/ravendano014/roboticarm/main/models/", "Base.STL", scene, function (newMeshes) {
+    var importedMesh = newMeshes[0];
+    importedMesh.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
+    importedMesh.parent = base;
+    importedMesh.position.x = -60; 
+    importedMesh.position.y = 0; 
+    importedMesh.position.z = 60; 
+    importedMesh.rotation.x = -1.5707963267948966;
+    importedMesh.rotation.y = 0; 
+    importedMesh.rotation.z = 0;
+    importedMesh.material = new BABYLON.StandardMaterial("importedMeshMaterial", scene);
+    importedMesh.material.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5); 
+});
+BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/ravendano014/roboticarm/main/models/", "Waist.STL", scene, function (newMeshes) {
+    var importedMesh = newMeshes[0];
+    importedMesh.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
+    importedMesh.parent = waist;
+    importedMesh.position.x = -48; 
+    importedMesh.position.y = 56; 
+    importedMesh.position.z = 48; 
+    importedMesh.rotation.x = -1.5707963267948966; 
+    importedMesh.rotation.y = 0; 
+    importedMesh.rotation.z = 0; 
+    importedMesh.material = new BABYLON.StandardMaterial("importedMeshMaterial", scene);
+    importedMesh.material.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8); 
+});
+BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/ravendano014/roboticarm/main/models/", "Arm%2001.STL", scene, function (newMeshes) {
+    var importedMesh = newMeshes[0];
+    importedMesh.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
+    importedMesh.parent = arm01;
+    importedMesh.position.x = 7; 
+    importedMesh.position.y = -26; 
+    importedMesh.position.z = -29; 
+    importedMesh.rotation.x = -1.5707963267948966; // Rotación inicial en el eje x (en radianes)
+    importedMesh.rotation.y = 0; // Rotación inicial en el eje y (en radianes)
+    importedMesh.rotation.z = -1.5707963267948966; // Rotación inicial en el eje z (en radianes)
+    importedMesh.material = new BABYLON.StandardMaterial("importedMeshMaterial", scene);
+    importedMesh.material.diffuseColor = new BABYLON.Color3(1, 0, 0); // Color rojo
+});
+BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/ravendano014/roboticarm/main/models/", "Arm%2002.STL", scene, function (newMeshes) {
+    var importedMesh = newMeshes[0];
+    importedMesh.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
+    importedMesh.parent = arm02;
+    importedMesh.position.x = 12; 
+    importedMesh.position.y = -20; 
+    importedMesh.position.z = -24; 
+    importedMesh.rotation.x = 0;
+    importedMesh.rotation.y = 0; 
+    importedMesh.rotation.z = 1.5707963267948966;
+    importedMesh.material = new BABYLON.StandardMaterial("importedMeshMaterial", scene);
+    importedMesh.material.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5); 
+});
+BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/ravendano014/roboticarm/main/models/", "Arm%2003.STL", scene, function (newMeshes) {
+    var importedMesh = newMeshes[0];
+    importedMesh.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
+    importedMesh.parent = arm03;
+    importedMesh.position.x = 12; 
+    importedMesh.position.y = -20; 
+    importedMesh.position.z = 6; 
+    importedMesh.rotation.x = 0; 
+    importedMesh.rotation.y = 0; 
+    importedMesh.rotation.z = 1.5707963267948966; 
+    importedMesh.material = new BABYLON.StandardMaterial("importedMeshMaterial", scene);
+    importedMesh.material.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8); 
+});
+BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/ravendano014/roboticarm/main/models/", "Gripper%20base.STL", scene, function (newMeshes) {
+    var importedMesh = newMeshes[0];
+    importedMesh.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
+    importedMesh.parent = grip;
+    importedMesh.position.x = 26; 
+    importedMesh.position.y = 9; 
+    importedMesh.position.z = -15; 
+    importedMesh.rotation.x = 0; 
+    importedMesh.rotation.y = 0; 
+    importedMesh.rotation.z = 3.141592653589793; 
+    importedMesh.material = new BABYLON.StandardMaterial("importedMeshMaterial", scene);
+    importedMesh.material.diffuseColor = new BABYLON.Color3(1, 0, 0); // Color rojo
+});
+
+BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/ravendano014/roboticarm/main/models/", "gear1.STL", scene, function (newMeshes) {
+    var importedMesh = newMeshes[0];
+    importedMesh.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
+    importedMesh.parent = grip;
+    importedMesh.position.x = 5; 
+    importedMesh.position.y = -57; 
+    importedMesh.position.z = 14; 
+    importedMesh.rotation.x = 0; 
+    importedMesh.rotation.y = 0; 
+    importedMesh.rotation.z = 0; 
+    importedMesh.material = new BABYLON.StandardMaterial("importedMeshMaterial", scene);
+    importedMesh.material.diffuseColor = new BABYLON.Color3(0, 1, 0); // Color verde
+});
+BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/ravendano014/roboticarm/main/models/", "gear1.STL", scene, function (newMeshes) {
+    var importedMesh = newMeshes[0];
+    importedMesh.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
+    importedMesh.parent = grip;
+    importedMesh.position.x = 10; 
+    importedMesh.position.y = -54; 
+    importedMesh.position.z = 18; 
+    importedMesh.rotation.x = 3.141592653589793; 
+    importedMesh.rotation.y = 0; 
+    importedMesh.rotation.z = 2.85; 
+    importedMesh.material = new BABYLON.StandardMaterial("importedMeshMaterial", scene);
+    importedMesh.material.diffuseColor = new BABYLON.Color3(0, 0, 1); // Color azul
+});
+BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/ravendano014/roboticarm/main/models/", "grip%20link%201.STL", scene, function (newMeshes) {
+    var importedMesh = newMeshes[0];
+    importedMesh.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
+    importedMesh.parent = grip;
+    importedMesh.position.x = 50; 
+    importedMesh.position.y = -60; 
+    importedMesh.position.z = 15; 
+    importedMesh.rotation.x = 0; 
+    importedMesh.rotation.y = 0; 
+    importedMesh.rotation.z = 3.141592653589793; 
+    importedMesh.material = new BABYLON.StandardMaterial("importedMeshMaterial", scene);
+    importedMesh.material.diffuseColor = new BABYLON.Color3(0, 1, 0); // Color verde
+});
+BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/ravendano014/roboticarm/main/models/", "grip%20link%201.STL", scene, function (newMeshes) {
+    var importedMesh = newMeshes[0];
+    importedMesh.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
+    importedMesh.parent = grip;
+    importedMesh.position.x = 7; 
+    importedMesh.position.y = -60; 
+    importedMesh.position.z = 15; 
+    importedMesh.rotation.x = 0; 
+    importedMesh.rotation.y = 0; 
+    importedMesh.rotation.z = 3.28; 
+    importedMesh.material = new BABYLON.StandardMaterial("importedMeshMaterial", scene);
+    importedMesh.material.diffuseColor = new BABYLON.Color3(0, 0.5, 0); // Color azul
+});
+BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/ravendano014/roboticarm/main/models/", "grip%20link%201.STL", scene, function (newMeshes) {
+    var importedMesh = newMeshes[0];
+    importedMesh.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
+    importedMesh.parent = grip;
+    importedMesh.position.x = 50; 
+    importedMesh.position.y = -60; 
+    importedMesh.position.z = 0; 
+    importedMesh.rotation.x = 0; 
+    importedMesh.rotation.y = 0; 
+    importedMesh.rotation.z = 3.141592653589793; 
+    importedMesh.material = new BABYLON.StandardMaterial("importedMeshMaterial", scene);
+    importedMesh.material.diffuseColor = new BABYLON.Color3(0, 1, 0); // Color verde
+});
+BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/ravendano014/roboticarm/main/models/", "grip%20link%201.STL", scene, function (newMeshes) {
+    var importedMesh = newMeshes[0];
+    importedMesh.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
+    importedMesh.parent = grip;
+    importedMesh.position.x = 7; 
+    importedMesh.position.y = -60; 
+    importedMesh.position.z = 0; 
+    importedMesh.rotation.x = 0; 
+    importedMesh.rotation.y = 0; 
+    importedMesh.rotation.z = 3.28; 
+    importedMesh.material = new BABYLON.StandardMaterial("importedMeshMaterial", scene);
+    importedMesh.material.diffuseColor = new BABYLON.Color3(0, 0.5, 0); // Color azul
+});
+BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/ravendano014/roboticarm/main/models/", "Gripper%201.STL", scene, function (newMeshes) {
+    var importedMesh = newMeshes[0];
+    importedMesh.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
+    importedMesh.parent = gearl;
+    importedMesh.position.x = 29; 
+    importedMesh.position.y = -99; 
+    importedMesh.position.z = -50; 
+    importedMesh.rotation.x = 2.85; 
+    importedMesh.rotation.y = - Math.PI / 2; 
+    importedMesh.rotation.z = 3.141592653589793; 
+    importedMesh.material = new BABYLON.StandardMaterial("importedMeshMaterial", scene);
+    importedMesh.material.diffuseColor = new BABYLON.Color3(0, 1, 0); // Color verde
+});
+BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/ravendano014/roboticarm/main/models/", "Gripper%201.STL", scene, function (newMeshes) {
+    var importedMesh = newMeshes[0];
+    importedMesh.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
+    importedMesh.parent = gearr;
+    importedMesh.position.x = -2; 
+    importedMesh.position.y = -99; 
+    importedMesh.position.z = -58; 
+    importedMesh.rotation.x = 0.60; 
+    importedMesh.rotation.y = (- Math.PI / 2); 
+    importedMesh.rotation.z = 0; 
+    importedMesh.material = new BABYLON.StandardMaterial("importedMeshMaterial", scene);
+    importedMesh.material.diffuseColor = new BABYLON.Color3(0, 0, 1); // Color azul
+});
+
+// Manejo de redimensionamiento de la ventana
+window.addEventListener("resize", function () {
+    engine.resize();
+});
+
+        // Crear los elementos del brazo robótico
+        var base = BABYLON.MeshBuilder.CreateCylinder("base", { height: 0.2, diameter: 4 }, scene);
+        base.position.y = 0.1;
+
+        var waist = BABYLON.MeshBuilder.CreateBox("waist", { width: 2, height: 0.2, depth: 1 }, scene);
+        waist.position.y = 0.1;
+        waist.parent = base;
+
+        var servo01 = BABYLON.MeshBuilder.CreateDisc("servo01", { radius: 0.5, tessellation: 50 }, scene);
+        servo01.position.y = 95;
+        servo01.position.x = -10;
+        servo01.position.z = 14;
+        servo01.parent = waist;
+
+        var arm01 = BABYLON.MeshBuilder.CreateBox("arm01", { width: 1, height: 3, depth: 1 }, scene);
+        arm01.position.y = 1.5;
+        arm01.parent = servo01;
+
+        var servo02 = BABYLON.MeshBuilder.CreateDisc("servo02", { radius: 0.3, tessellation: 50 }, scene);
+        servo02.position.y = 120;
+        servo02.parent = arm01;
+
+        var arm02 = BABYLON.MeshBuilder.CreateBox("arm02", { width: 1, height: 3, depth: 1 }, scene);
+        arm02.position.y = 1.5;
+        arm02.parent = servo02;
+
+        var servo03 = BABYLON.MeshBuilder.CreateDisc("servo03", { radius: 0.3, tessellation: 50 }, scene);
+        servo03.position.y = 0;
+        servo03.position.x = 0;
+        servo03.position.z = 85;
+        servo03.parent = arm02;
+
+        var arm03 = BABYLON.MeshBuilder.CreateBox("arm03", { width: 1, height: 1, depth: 1 }, scene);
+        arm03.position.y = 0.5;
+        arm03.parent = servo03;
+
+        var servo04 = BABYLON.MeshBuilder.CreateDisc("servo04", { radius: 0.3, tessellation: 50 }, scene);
+        servo04.position.y = 0;
+        servo04.position.x = 0;
+        servo04.position.z = 33;
+        servo04.parent = grip;
+
+        var grip = BABYLON.MeshBuilder.CreateBox("grip", { width: 1, height: 1, depth: 1 }, scene);
+        grip.position.y = 0;
+        grip.position.x = 0;
+        grip.position.z = 33;
+        grip.parent = arm03;
+
+        var gripperbase = BABYLON.MeshBuilder.CreateBox("gripper", { width: 1, height: 1, depth: 1 }, scene);
+        gripperbase.position.y = 0;
+        gripperbase.position.x = 0;
+        gripperbase.position.z = 33;
+        gripperbase.parent = grip;
+
+        
+        var gearl = BABYLON.MeshBuilder.CreateBox("gear", { width: 1, height: 1, depth: 1 }, scene);
+        gearl.position.y = 0;
+        gearl.position.x = 0;
+        gearl.position.z = 33;
+        gearl.parent = gripperbase;
+
+        var gearr = BABYLON.MeshBuilder.CreateBox("gear", { width: 1, height: 1, depth: 1 }, scene);
+        gearr.position.y = 0;
+        gearr.position.x = 0;
+        gearr.position.z = 33;
+        gearr.parent = gripperbase;
+
+        var servo05 = BABYLON.MeshBuilder.CreateDisc("servo05", { radius: 0.3, tessellation: 50 }, scene);
+        servo05.position.y = 0;
+        servo05.position.x = 0;
+        servo05.position.z = 83;
+        servo05.parent = gripperbase;
+
+
+        var gripper = BABYLON.MeshBuilder.CreateBox("gripper", { width: 1, height: 1, depth: 1 }, scene);
+        gripper.position.y = 0;
+        gripper.position.x = 0;
+        gripper.position.z = 33;
+        gripper.parent = gearl;
+
+
+        // Asignar colores únicos a cada elemento
+        base.material = new BABYLON.StandardMaterial("baseMat", scene);
+        base.material.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+
+        waist.material = new BABYLON.StandardMaterial("waistMat", scene);
+        waist.material.diffuseColor = new BABYLON.Color3(0.4, 0.4, 0.4);
+
+        servo01.material = new BABYLON.StandardMaterial("servo01Mat", scene);
+        servo01.material.diffuseColor = new BABYLON.Color3(0.6, 0.6, 0.6);
+
+        arm01.material = new BABYLON.StandardMaterial("arm01Mat", scene);
+        arm01.material.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
+
+        servo02.material = new BABYLON.StandardMaterial("servo02Mat", scene);
+        servo02.material.diffuseColor = new BABYLON.Color3(1, 1, 1);
+
+        arm02.material = new BABYLON.StandardMaterial("arm02Mat", scene);
+        arm02.material.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
+
+        servo03.material = new BABYLON.StandardMaterial("servo03Mat", scene);
+        servo03.material.diffuseColor = new BABYLON.Color3(0.6, 0.6, 0.6);
+
+        arm03.material = new BABYLON.StandardMaterial("arm03Mat", scene);
+        arm03.material.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
+
+        servo04.material = new BABYLON.StandardMaterial("servo04Mat", scene);
+        servo04.material.diffuseColor = new BABYLON.Color3(0.6, 0.6, 0.6);
+
+        grip.material = new BABYLON.StandardMaterial("gripMat", scene);
+        grip.material.diffuseColor = new BABYLON.Color3(0.4, 0.4, 0.4);
+
+        gearl.material = new BABYLON.StandardMaterial("gearlrMat", scene);
+        gearl.material.diffuseColor = new BABYLON.Color3(0.9, 0.9, 0.9);
+
+        gripper.material = new BABYLON.StandardMaterial("gripperMat", scene);
+        gripper.material.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+
+        // Iniciar el motor
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+
+        // Manejar los movimientos del brazo robótico con el teclado
+        var rotationSpeed = 0.04;
+        window.addEventListener("keydown", function (event) {
+            switch (event.key) {
+                case "a":
+                    waist.rotation.y -= rotationSpeed; // Rotación de 'waist'
+                    break;
+                case "s":
+                    waist.rotation.y += rotationSpeed; // Rotación de 'waist'
+                    break;
+                case "e":
+                    servo01.rotation.x -= rotationSpeed;
+                    break;
+                case "r":
+                    servo01.rotation.x += rotationSpeed;                   
+                    break;   
+                case "z":
+                    servo02.rotation.x -= rotationSpeed;
+                    break;
+                case "x":
+                    servo02.rotation.x += rotationSpeed;
+                    break;
+                case "f":
+                    servo03.rotation.z -= rotationSpeed;
+                    break;
+                case "g":
+                    servo03.rotation.z += rotationSpeed;
+                    break;
+                case "c":
+                    servo04.rotation.x -= rotationSpeed;
+                    grip.rotation.x -= rotationSpeed;
+                    break;
+                case "v":
+                    servo04.rotation.x += rotationSpeed;
+                    grip.rotation.x += rotationSpeed;
+                    break;
+                case "q":
+                    servo05.rotation.z -= rotationSpeed;
+                    gearl.rotation.z -= rotationSpeed;
+                    gearr.rotation.z += rotationSpeed;
+                    break;
+                case "w":
+                    servo05.rotation.z += rotationSpeed;
+                    gearr.rotation.z -= rotationSpeed;
+                    gearl.rotation.z += rotationSpeed;
+                    break;                    
+            }
+        });
+
+
+// Crear una instancia del módulo GUI
+var GUI = BABYLON.GUI;
+
+// Crear una pantalla GUI para los botones
+var advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+var UiPanel = new BABYLON.GUI.StackPanel();
+UiPanel.width = "220px";
+UiPanel.fontSize = "14px";
+UiPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
+UiPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+advancedTexture.addControl(UiPanel);
+
+var slider = new BABYLON.GUI.Slider();
+slider.minimum = 0.01; // Valor mínimo de velocidad
+slider.maximum = 0.1; // Valor máximo de velocidad
+slider.value = rotationSpeed; // Valor inicial
+slider.height = "20px";
+slider.width = "200px";
+slider.thumbWidth = "20px";
+slider.color = "green";
+slider.onValueChangedObservable.add(function (value) {
+    // Actualizar el valor de rotationSpeed cuando se cambia el deslizador
+    rotationSpeed = value;
+});
+UiPanel.addControl(slider);
+
+// Crear un botón de inicio
+var startButton = GUI.Button.CreateSimpleButton("startButton", "Iniciar Rutina");
+startButton.paddingTop = "10px";
+startButton.width = "150px";
+startButton.height = "40px";
+startButton.color = "white";
+startButton.background = "green";
+startButton.onPointerUpObservable.add(function () {
+    startRoutine();
+});
+UiPanel.addControl(startButton);
+
+// Crear un botón de detención
+var stopButton = GUI.Button.CreateSimpleButton("stopButton", "Detener Rutina");
+stopButton.paddingTop = "10px";
+stopButton.width = "150px";
+stopButton.height = "40px";
+stopButton.color = "white";
+stopButton.background = "red";
+stopButton.onPointerUpObservable.add(function () {
+    stopRoutine();
+});
+UiPanel.addControl(stopButton);
+
+
+
+// Arreglo para almacenar las rotaciones en x, y, z de los servos
+var servoRotations = [];
+
+// Variable para llevar un registro de las veces que se ha presionado el botón "Set"
+var setButtonCount = 0;
+
+// Crear un botón "Set" para agregar datos de rotación
+var setButton = BABYLON.GUI.Button.CreateSimpleButton("setButton", "Set");
+setButton.width = "150px";
+setButton.height = "40px";
+setButton.color = "white";
+setButton.background = "blue";
+setButton.onPointerUpObservable.add(function () {
+    // Agregar las rotaciones de los servos al arreglo
+    servoRotations.push({
+        servo: "servo01",
+        rotation: {
+            x: servo01.rotation.x,
+            y: servo01.rotation.y,
+            z: servo01.rotation.z
+        }
+    });
+
+    servoRotations.push({
+        servo: "servo02",
+        rotation: {
+            x: servo02.rotation.x,
+            y: servo02.rotation.y,
+            z: servo02.rotation.z
+        }
+    });
+
+    servoRotations.push({
+        servo: "servo03",
+        rotation: {
+            x: servo03.rotation.x,
+            y: servo03.rotation.y,
+            z: servo03.rotation.z
+        }
+    });
+
+    servoRotations.push({
+        servo: "servo04",
+        rotation: {
+            x: servo04.rotation.x,
+            y: servo04.rotation.y,
+            z: servo04.rotation.z
+        }
+    });
+
+    servoRotations.push({
+        servo: "servo05",
+        rotation: {
+            x: servo05.rotation.x,
+            y: servo05.rotation.y,
+            z: servo05.rotation.z
+        }
+    });
+    console.log(servoRotations);
+    // Incrementar el contador de veces que se ha presionado el botón "Set"
+    setButtonCount++;
+});
+UiPanel.addControl(setButton);
+
+// Crear un botón "Reset" para vaciar el arreglo y restablecer las rotaciones
+var resetButton = BABYLON.GUI.Button.CreateSimpleButton("resetButton", "Reset");
+resetButton.width = "150px";
+resetButton.height = "40px";
+resetButton.color = "white";
+resetButton.background = "red";
+resetButton.onPointerUpObservable.add(function () {
+    // Vaciar el arreglo de rotaciones
+    servoRotations = [];
+});
+UiPanel.addControl(resetButton);
+
+// Crear un botón "Routine" para ejecutar una rutina basada en los valores almacenados
+var routineButton = BABYLON.GUI.Button.CreateSimpleButton("routineButton", "Routine");
+routineButton.width = "150px";
+routineButton.height = "40px";
+routineButton.color = "white";
+routineButton.background = "green";
+routineButton.onPointerUpObservable.add(function () {
+    // Verificar si hay datos en el arreglo de rotaciones
+    if (servoRotations.length > 0) {
+        // Llamar a la función para ejecutar la rutina
+        executeRoutine();
+    }
+});
+UiPanel.addControl(routineButton);
+
+// Función para ejecutar una rutina de movimientos de servos
+function executeRoutine() {
+
+    for (var i = 0; i < servoRotations.length; i++) {
+        var movimiento = servoRotations[i];
+        aplicarMovimiento(movimiento.servo, movimiento.rotation);
+    }
+
+}
+
+
+// Función para aplicar un movimiento a un servo específico
+function aplicarMovimiento(servoNombre, rotacion) {
+    var servo = scene.getMeshByName(servoNombre); // Obtener el servo por su nombre
+
+    if (servo) {
+        // Aplicar la rotación al servo
+        servo.rotation.x = rotacion.x;
+        servo.rotation.y = rotacion.y;
+        servo.rotation.z = rotacion.z;
+    } else {
+        console.warn("El servo '" + servoNombre + "' no fue encontrado en la escena.");
+    }
+}
+
+
+
+/*
+// Función para ejecutar la rutina
+function executeRoutine() {
+    // Iterar a través de los datos almacenados en el arreglo
+    for (var i = 0; i < servoRotations.length; i++) {
+        var rotationData = servoRotations[i];
+
+        //for (var i = 0; i < servoRotations.length; i++) {
+        //    var rotationData = servoRotations[i];
+        //
+        // Ejemplo de uso: rotar servo01 en el eje X hacia un valor de detención con una velocidad de rotationSpeed
+        //    rotateServoIncrementally(servo01, 'x', rotationSpeed, 'clockwise', servoRotations[i].servo01RotationX); 
+        //    rotateServoIncrementally(servo02, 'x', rotationSpeed, 'clockwise', servoRotations[i].servo02RotationX); 
+        //    rotateServoIncrementally(servo03, 'z', rotationSpeed, 'clockwise', servoRotations[i].servo03RotationZ); 
+        //    rotateServoIncrementally(servo04, 'x', rotationSpeed, 'clockwise', servoRotations[i].servo04RotationX); 
+        //    rotateServoIncrementally(servo05, 'z', rotationSpeed, 'clockwise', servoRotations[i].servo05RotationZ); 
+        //}
+        
+
+        // Aplicar las rotaciones almacenadas a los servos en cada iteración
+        servo01.rotation.x = rotationData.servo01RotationX;
+        servo01.rotation.y = rotationData.servo01RotationY;
+        servo01.rotation.z = rotationData.servo01RotationZ;
+
+        servo02.rotation.x = rotationData.servo02RotationX;
+        servo02.rotation.y = rotationData.servo02RotationY;
+        servo02.rotation.z = rotationData.servo02RotationZ;
+
+        servo03.rotation.x = rotationData.servo03RotationX;
+        servo03.rotation.y = rotationData.servo03RotationY;
+        servo03.rotation.z = rotationData.servo03RotationZ;
+
+        servo04.rotation.x = rotationData.servo04RotationX;
+        servo04.rotation.y = rotationData.servo04RotationY;
+        servo04.rotation.z = rotationData.servo04RotationZ;
+
+        servo05.rotation.x = rotationData.servo05RotationX;
+        servo05.rotation.y = rotationData.servo05RotationY;
+        servo05.rotation.z = rotationData.servo05RotationZ;
+
+        setTimeout(() => {
+        console.log("Delayed for 1 second.");
+        }, "1000");
+
+        // Puedes agregar lógica adicional aquí si es necesario
+
+    }
+}
+*/
+
+// Agregar una variable para controlar el estado de la rutina
+var isRoutineRunning = false;
+
+
+// Función para iniciar la rutina
+function startRoutine() {
+    if (!isRoutineRunning) {
+        isRoutineRunning = true;
+        performRoutine();
+    }
+}
+
+// Función para detener la rutina
+function stopRoutine() {
+    isRoutineRunning = false;
+}
+
+i=0;
+// Función que realiza la rutina
+function performRoutine() {
+
+    if (isRoutineRunning) {
+
+        // Realizar un movimiento de rotación en la cintura
+        rotateWaist(1); // Se mueve en el eje y
+
+        if(i<30){
+            rotateServo(servo01, 0);
+        }
+        if(i<20){
+            rotateServo(servo02, 1);
+        }
+
+        if(i<40){
+            rotateServo(servo03, 1);
+        }
+
+        if(i<40){
+            rotateServo(servo04, 0);
+        }
+
+
+
+        if(i>30 && i<60){
+            rotateServo(servo01, 1);
+        }
+        if(i>50 && i<70){
+            rotateServo(servo02, 0);
+        }
+        if(i>20 && i<55){
+            rotateServo(servo03, 0);
+        }
+        if(i>40 && i<80){
+            rotateServo(servo04, 1);
+        }
+
+        if(i>90){
+            i=0;
+        }
+
+        i++;
+
+/*
+    // Iterar a través de cada objeto en servoRotations
+    servoRotations.forEach(function (servoRotation) {
+        var servoName = servoRotation.servo;
+        var servo = window[servoName]; // Acceder al objeto servo por su nombre
+
+        if (servo) {
+            // Obtener la rotación deseada para el servo
+            var targetRotation = servoRotation.rotation;
+
+            // Iterar a través de los ejes X, Y y Z
+            for (var axis in targetRotation) {
+                if (targetRotation.hasOwnProperty(axis)) {
+                    // Obtener el valor de destino para el eje actual
+                    var targetValue = targetRotation[axis];
+
+                    // Determinar la dirección de rotación (incremento o decremento)
+                    var directionFactor = servo.rotation[axis] < targetValue ? 1 : -1;
+
+                    rotateServo(servo, directionFactor);
+
+                    console.log(servoName);
+                    console.log(directionFactor);
+                    console.log(axis);
+                    console.log(targetValue);
+                    
+                }
+            }
+        } else {
+            console.error('El servo ' + servoName + ' no está definido.');
+        }
+    });
+    */
+
+        // Establecer un intervalo de tiempo entre movimientos (en milisegundos)
+        setTimeout(performRoutine, 100); // Puedes ajustar el intervalo según tus necesidades
+   
+    }
+    
+}
+
+// Función para rotar la cintura del brazo robótico
+function rotateWaist(vector) {
+    // Realizar un giro de la cintura (por ejemplo, hacia la izquierda)
+    if(vector==1){ 
+        waist.rotation.y += rotationSpeed; // Puedes ajustar la velocidad y dirección de rotación
+    } else {
+        waist.rotation.y -= rotationSpeed; // Puedes ajustar la velocidad y dirección de rotación
+    }
+}
+
+
+// Función para rotar un servo del brazo robótico
+function rotateServo(servo, vector) {
+    // Realizar un giro del servo (por ejemplo, en sentido horario)
+    if(servo!=servo03){
+        if(vector==1){ 
+            servo.rotation.x += rotationSpeed; // Puedes ajustar la velocidad y dirección de rotación
+            if(servo===servo04){
+                grip.rotation.x += rotationSpeed; // Puedes ajustar la velocidad y dirección de rotación
+            }
+        } else {
+            servo.rotation.x -= rotationSpeed; // Puedes ajustar la velocidad y dirección de rotación
+            if(servo===servo04){
+                grip.rotation.x -= rotationSpeed; // Puedes ajustar la velocidad y dirección de rotación
+            }
+        }
+    } else {
+        if(vector==1){ 
+            servo.rotation.z += rotationSpeed; // Puedes ajustar la velocidad y dirección de rotación
+
+        } else {
+            servo.rotation.z -= rotationSpeed; // Puedes ajustar la velocidad y dirección de rotación
+
+        }
+    }
+
+}
+
+// Función para rotar un servo en un eje específico en incrementos progresivos hasta un valor de detención
+function rotateServoIncrementally(servo, axis, increment, direction, stopValue) {
+    var rotation = servo.rotation[axis]; // Obtener el valor actual del eje
+    
+    console.log(servo.rotation[axis]);
+    
+    var intervalId;
+    var directionFactor = direction === "clockwise" ? 1 : -1; // Factor de dirección
+
+    // Determinar la dirección de rotación en función de stopValue
+    if ((direction === "clockwise" && stopValue < rotation) ||
+        (direction === "counterclockwise" && stopValue > rotation)) {
+        directionFactor *= -1; // Cambiar la dirección si es necesario
+    }
+
+    // Función para rotar el servo en incrementos progresivos
+    function rotate() {
+        rotation += increment * directionFactor;
+        servo.rotation[axis] = rotation;
+
+        // Determinar si se alcanzó el valor de detención
+        if ((direction === "clockwise" && rotation >= stopValue) ||
+            (direction === "counterclockwise" && rotation <= stopValue)) {
+            clearInterval(intervalId);
+        }
+    }
+
+    console.log(servo.rotation[axis]);
+
+    // Iniciar la rotación gradual con un temporizador
+    intervalId = setInterval(rotate, 16); // 60 FPS
+}
+
+       // Inicializar handtrack.js
+       const handStatus = document.getElementById('handStatus');
+       const context = canvas.getContext("2d");
+       const video = document.getElementById("myvideo");
+       let trackButton = document.getElementById("trackbutton");
+       let updateNote = document.getElementById("updatenote");
+
+let isVideo = false;
+let model = null;
+
+const modelParams = {
+    flipHorizontal: true,   // flip e.g for video  
+    maxNumBoxes: 20,        // maximum number of boxes to detect
+    iouThreshold: 0.5,      // ioU threshold for non-max suppression
+    scoreThreshold: 0.6,    // confidence threshold for predictions.
+}
+
+function startVideo() {
+    handTrack.startVideo(video).then(function (status) {
+        console.log("video started", status);
+        if (status) {
+            updateNote.innerText = "Video started. Now tracking"
+            isVideo = true
+            runDetection()
+        } else {
+            updateNote.innerText = "Please enable video"
+        }
+    });
+}
+
+function toggleVideo() {
+    if (!isVideo) {
+        updateNote.innerText = "Starting video"
+        startVideo();
+    } else {
+        updateNote.innerText = "Stopping video"
+        handTrack.stopVideo(video)
+        isVideo = false;
+        updateNote.innerText = "Video stopped"
+    }
+}
+
+
+function runDetection() {
+    model.detect(video).then(predictions => {
+        console.log("Predictions: ", predictions);
+        model.renderPredictions(predictions, canvas, context, video);
+        if (isVideo) {
+            requestAnimationFrame(runDetection);
+        }
+
+       
+        if (predictions.length > 0) {
+            const hand = predictions[0].bbox;
+            handstate = predictions[0].label;
+            console.log(handstate);
+            const centerX = hand[0] + hand[2] / 2;
+            const centerY = hand[1] + hand[3] / 2;
+
+            // Mueve el objeto en pantalla según el movimiento de la mano
+            console.log('x: '+centerX);
+            console.log('y: '+centerY);
+            umbralTopX = 400;
+            umbralBottomX = 100;
+            umbralTopY = 400;
+            umbralBottomY = 100;
+
+            // Calcula la distancia entre los dedos (ancho de la mano)
+            const handWidth = hand[2];
+
+            // Define un umbral para determinar si la mano está abierta o cerrada
+            const handOpenThreshold = 50;
+            /*
+            if (handWidth > handOpenThreshold) {
+                handStatus.textContent = 'Hand Status: Open';
+            } else {
+                handStatus.textContent = 'Hand Status: Closed';
+            }
+            */
+
+            if(handstate == 'closed'){
+                servo05.rotation.z -= rotationSpeed;
+                gearl.rotation.z -= rotationSpeed;
+                gearr.rotation.z += rotationSpeed;
+                handStatus.textContent = 'Hand Status: Closed';
+            } else if(handstate == 'open'){
+                if(centerX>(umbralBottomX/2) && centerX<(umbralTopX/2)){
+                    servo05.rotation.z += rotationSpeed;
+                    gearr.rotation.z -= rotationSpeed;
+                    gearl.rotation.z += rotationSpeed;
+                }
+                handStatus.textContent = 'Hand Status: Open';
+                
+                    if(centerX>umbralBottomX && centerX<umbralTopX){
+                        if(centerX>250){
+                            servo01.rotation.x -= rotationSpeed; 
+                        } else {
+                            servo01.rotation.x += rotationSpeed; 
+                        }
+                    }
+
+                    if(centerY>umbralBottomY && centerY<umbralTopY){
+                        if(centerY>250){
+                            servo02.rotation.x += rotationSpeed; 
+                        } else {
+                            servo02.rotation.x -= rotationSpeed;
+                        }
+                    }
+            }
+            
+            if(centerX>umbralBottomX && centerX<umbralTopX && handstate == 'face'){
+                if(centerX>320){
+                    servo03.rotation.z -= rotationSpeed; 
+                } else {
+                    servo03.rotation.z += rotationSpeed; 
+                }
+            }
+
+
+        }
+
+
+    });
+
+    
+}
+
+// Load the model.
+handTrack.load(modelParams).then(lmodel => {
+    // detect objects in the image.
+    model = lmodel
+    updateNote.innerText = "Loaded Model!"
+    trackButton.disabled = false
+});
+        
+// Manejo de redimensionamiento de la ventana
+window.addEventListener("resize", function () {
+    engine.resize();
+});
+     
+    </script>
+</body>
+</html>
