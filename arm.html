@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Brazo Robótico Mejorado</title>
+    <style>
+        canvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+        .canvasbox {
+            border-radius: 3px;
+            margin-right: 10px;
+            width: 225px;
+            height: 159px;
+            border-bottom: 3px solid #0063FF;
+            box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.2), 0 4px 10px 0 #00000030;
+            background: #333;
+        }
+        .control-panel {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+        }
+        .slider {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div style="position: relative;">
+        <canvas id="renderCanvas"></canvas>
+        <canvas id="canvas" class="canvasbox" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+    </div>
+
+    <div class="control-panel">
+        <input type="range" min="0.01" max="0.1" step="0.01" value="0.04" class="slider" id="speedSlider">
+        <label>Velocidad</label>
+        <div>
+            <button onclick="toggleVideo()">Toggle Video</button>
+            <button onclick="startAdvancedRoutine()">Rutina Avanzada</button>
+        </div>
+        <p id="handStatus">Estado de la mano: -</p>
+    </div>
+
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handtrackjs@latest/dist/handtrack.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js"></script>
+
+    <script>
+        // 1. Configuración inicial de Babylon.js
+        const canvas = document.getElementById('renderCanvas');
+        const engine = new BABYLON.Engine(canvas, true);
+        const scene = new BABYLON.Scene(engine);
+        const camera = new BABYLON.ArcRotateCamera(
+            "camera", 
+            Math.PI/1.33, 
+            0.9, 
+            15, 
+            new BABYLON.Vector3(-160, 360, 160), 
+            scene
+        );
+        camera.attachControl(canvas, true);
+        new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+        // 2. Variables globales
+        let rotationSpeed = 0.04;
+        const ROTATION_LIMITS = {
+            x: { min: -Math.PI/4, max: Math.PI/4 },
+            y: { min: -Math.PI/2, max: Math.PI/2 },
+            z: { min: -Math.PI/2, max: Math.PI/2 }
+        };
+        const activeTweens = [];
+
+        // 3. Creación de la estructura jerárquica
+        const createBaseStructure = () => {
+            const base = BABYLON.MeshBuilder.CreateCylinder("base", { height: 0.2, diameter: 4 }, scene);
+            base.position.y = 0.1;
+
+            const waist = BABYLON.MeshBuilder.CreateBox("waist", { width: 2, height: 0.2, depth: 1 }, scene);
+            waist.parent = base;
+
+            // Crear todos los elementos padres primero...
+            return { base, waist };
+        };
+
+        // 4. Carga de modelos STL
+        const loadModels = async (parentNodes) => {
+            try {
+                const models = await Promise.all([
+                    BABYLON.SceneLoader.ImportMeshAsync("", "https://raw.githubusercontent.com/ravendano014/roboticarm/main/models/", "Base.STL", scene),
+                    BABYLON.SceneLoader.ImportMeshAsync("", "", "Waist.STL", scene),
+                    // ... otros modelos
+                ]);
+
+                models.forEach((result, index) => {
+                    const mesh = result.meshes[0];
+                    switch(index) {
+                        case 0:
+                            configureBase(mesh, parentNodes.base);
+                            break;
+                        case 1:
+                            configureWaist(mesh, parentNodes.waist);
+                            break;
+                        // ... otras configuraciones
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading models:', error);
+            }
+        };
+
+        const configureBase = (mesh, parent) => {
+            mesh.parent = parent;
+            mesh.position.set(-60, 0, 60);
+            mesh.rotation.x = -Math.PI/2;
+            mesh.material = createMaterial([0.5, 0.5, 0.5]);
+        };
+
+        // 5. Sistema de animación
+        const animateServo = (servo, targetRotation, duration = 500) => {
+            activeTweens.forEach(t => t._object === servo.rotation && t.stop());
+            
+            return new TWEEN.Tween(servo.rotation)
+                .to(targetRotation, duration)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .start();
+        };
+
+        // 6. Control del brazo
+        const rotateServo = (servo, axis, direction) => {
+            const newValue = BABYLON.Scalar.Clamp(
+                servo.rotation[axis] + (rotationSpeed * direction),
+                ROTATION_LIMITS[axis].min,
+                ROTATION_LIMITS[axis].max
+            );
+            
+            animateServo(servo, { [axis]: newValue });
+        };
+
+        // 7. Sistema de rutinas
+        const advancedRoutine = [
+            { servo: 'servo01', axis: 'x', target: Math.PI/4, duration: 1000 },
+            { servo: 'servo02', axis: 'x', target: -Math.PI/4, duration: 1000 },
+            // ... más pasos de la rutina
+        ];
+
+        const executeRoutine = async (routine) => {
+            for (const step of routine) {
+                const servo = scene.getMeshByName(step.servo);
+                await new Promise(resolve => {
+                    animateServo(servo, { [step.axis]: step.target }, step.duration)
+                        .onComplete(resolve);
+                });
+            }
+        };
+
+        // 8. Integración con Handtrack.js
+        const initHandTracking = () => {
+            const video = document.getElementById("myvideo");
+            const modelParams = {
+                flipHorizontal: true,
+                maxNumBoxes: 1,
+                scoreThreshold: 0.7
+            };
+
+            handTrack.load(modelParams).then(model => {
+                handTrack.startVideo(video).then(status => {
+                    if (status) {
+                        const detectFrame = () => {
+                            model.detect(video).then(predictions => {
+                                handleHandGestures(predictions);
+                                requestAnimationFrame(detectFrame);
+                            });
+                        };
+                        detectFrame();
+                    }
+                });
+            });
+        };
+
+        const handleHandGestures = (predictions) => {
+            if (predictions.length > 0) {
+                const hand = predictions[0];
+                const canvas = document.getElementById('canvas');
+                const normalizedX = (hand.bbox[0] + hand.bbox[2]/2) / canvas.width;
+                
+                if (hand.label === 'closed') {
+                    animateServo(servo05, { z: ROTATION_LIMITS.z.min });
+                } else if (hand.label === 'open') {
+                    if (normalizedX > 0.7) rotateServo(servo01, 'x', -1);
+                    if (normalizedX < 0.3) rotateServo(servo01, 'x', 1);
+                }
+            }
+        };
+
+        // 9. Configuración inicial
+        (async () => {
+            const parentNodes = createBaseStructure();
+            await loadModels(parentNodes);
+            
+            document.getElementById('speedSlider').addEventListener('input', (e) => {
+                rotationSpeed = parseFloat(e.target.value);
+            });
+
+            engine.runRenderLoop(() => {
+                TWEEN.update();
+                scene.render();
+            });
+        })();
+    </script>
+</body>
+</html>
