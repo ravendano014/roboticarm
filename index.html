@@ -34,6 +34,7 @@
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
       color: white;
       z-index: 10;
+      transition: all 0.3s ease-in-out; /* Smooth transition for panel height */
     }
     
     .control-panel.left {
@@ -52,6 +53,60 @@
       right: 15px;
       bottom: 15px;
       width: 240px;
+    }
+
+    .control-panel.bottom-left {
+      left: 15px;
+      bottom: 15px;
+      width: 220px;
+    }
+
+    /* New styles for collapsible panels */
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .panel-header h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #7fdbff;
+        display: flex;
+        align-items: center;
+    }
+
+    .panel-header h2 i {
+        margin-right: 8px;
+        font-size: 18px;
+    }
+
+    .collapse-icon {
+      transition: transform 0.3s ease;
+      font-size: 16px;
+    }
+
+    .collapse-icon.rotated {
+      transform: rotate(180deg);
+    }
+
+    .panel-content {
+      overflow: hidden;
+      transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+      max-height: 1000px; /* Large enough to accommodate content */
+      opacity: 1;
+    }
+
+    .panel-content.collapsed {
+      max-height: 0;
+      opacity: 0;
+      padding-bottom: 0;
+      margin-bottom: 0;
     }
     
     .control-group {
@@ -181,6 +236,10 @@
       .control-panel.bottom-right {
         width: 180px;
       }
+
+      .control-panel.bottom-left {
+        width: 180px;
+      }
       
       .control-button {
         padding: 6px 0;
@@ -201,134 +260,212 @@
   <canvas id="renderCanvas"></canvas>
   
   <div class="control-panel left" id="armControls">
-    
-    <div class="control-group">
-      <h3><i class="fas fa-cogs"></i> Gears</h3>
-      <div class="slider-container">
-        <input type="range" min="-1.0" max="1.0" step="0.01" value="0" class="slider" id="gearSlider">
-      </div>
+    <div class="panel-header">
+      <h2><i class="fas fa-robot"></i> Arm Controls</h2>
+      <i class="fas fa-chevron-up collapse-icon"></i>
     </div>
-  
-    <div class="control-group" style="display: none;">
-      <h3><i class="fas fa-grip-lines"></i> Gripper Open/Close</h3>
-      <div class="slider-container">
-        <input type="range" min="-0.5" max="0.5" step="0.01" value="0" class="slider" id="gripperOpenCloseSlider">
-      </div>
-    </div>
-
-    <div class="control-group">
-      <h3><i class="fas fa-hand-paper"></i> Gripper Pitch</h3>
-      <div class="slider-container">
-        <input type="range" min="-1.5" max="1.5" step="0.01" value="0" class="slider" id="gripPitchSlider">
-      </div>
-    </div>
-
-    <div class="control-group">
-      <h3><i class="fas fa-robot"></i> Arm 3</h3>
-      <div class="slider-container">
-        <input type="range" min="-1.5" max="1.5" step="0.01" value="0" class="slider" id="arm3Slider">
-      </div>
-    </div>
-
-    <div class="control-group">
-      <h3><i class="fas fa-robot"></i> Arm 2</h3>
-      <div class="slider-container">
-        <input type="range" min="-1.5" max="1.5" step="0.01" value="0" class="slider" id="arm2Slider">
-      </div>
-    </div>
-
-    <div class="control-group">
-      <h3><i class="fas fa-robot"></i> Arm 1</h3>
-      <div class="slider-container">
-        <input type="range" min="-1.5" max="1.5" step="0.01" value="0" class="slider" id="arm1Slider">
-      </div>
-    </div>
-
-    <div class="control-group" style="display: none;">
-      <h3><i class="fas fa-link"></i> Grip Links</h3>
-      <div class="slider-container">
-        <input type="range" min="-0.5" max="0.5" step="0.01" value="0" class="slider" id="linkAdjustSlider">
-      </div>
-    </div>
-
-
-
-    <div class="control-group">
-      <h3><i class="fas fa-undo-alt"></i> Waist Rotation</h3>
-      <div class="slider-container">
-        <input type="range" min="-3.14" max="3.14" step="0.01" value="0" class="slider" id="waistSlider">
-      </div>
-    </div>
-
-    <div class="control-group">
-      <h3><i class="fas fa-sliders-h"></i> Speed Control</h3>
-      <div class="slider-container">
-        <div class="slider-label">
-          <span>Slow</span>
-          <span>Fast</span>
+    <div class="panel-content">
+      <div class="control-group">
+        <h3><i class="fas fa-cogs"></i> Gears</h3>
+        <div class="slider-container">
+          <input type="range" min="-1.0" max="1.0" step="0.01" value="0" class="slider" id="gearSlider">
         </div>
-        <input type="range" min="0.01" max="0.1" step="0.01" value="0.04" class="slider" id="speedSlider">
+      </div>
+    
+      <div class="control-group" style="display: none;">
+        <h3><i class="fas fa-grip-lines"></i> Gripper Open/Close</h3>
+        <div class="slider-container">
+          <input type="range" min="-0.5" max="0.5" step="0.01" value="0" class="slider" id="gripperOpenCloseSlider">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3><i class="fas fa-hand-paper"></i> Gripper Pitch</h3>
+        <div class="slider-container">
+          <input type="range" min="-1.5" max="1.5" step="0.01" value="0" class="slider" id="gripPitchSlider">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3><i class="fas fa-robot"></i> Arm 3</h3>
+        <div class="slider-container">
+          <input type="range" min="-1.5" max="1.5" step="0.01" value="0" class="slider" id="arm3Slider">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3><i class="fas fa-robot"></i> Arm 2</h3>
+        <div class="slider-container">
+          <input type="range" min="-1.5" max="1.5" step="0.01" value="0" class="slider" id="arm2Slider">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3><i class="fas fa-robot"></i> Arm 1</h3>
+        <div class="slider-container">
+          <input type="range" min="-1.5" max="1.5" step="0.01" value="0" class="slider" id="arm1Slider">
+        </div>
+      </div>
+
+      <div class="control-group" style="display: none;">
+        <h3><i class="fas fa-link"></i> Grip Links</h3>
+        <div class="slider-container">
+          <input type="range" min="-0.5" max="0.5" step="0.01" value="0" class="slider" id="linkAdjustSlider">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3><i class="fas fa-undo-alt"></i> Waist Rotation</h3>
+        <div class="slider-container">
+          <input type="range" min="-3.14" max="3.14" step="0.01" value="0" class="slider" id="waistSlider">
+        </div>
+      </div>
+
+      <div class="control-group" style="display: none;">
+        <h3><i class="fas fa-sliders-h"></i> Speed Control</h3>
+        <div class="slider-container">
+          <div class="slider-label">
+            <span>Slow</span>
+            <span>Fast</span>
+          </div>
+          <input type="range" min="0.01" max="0.1" step="0.01" value="0.04" class="slider" id="speedSlider">
+        </div>
       </div>
     </div>
-
   </div>
   
   <div class="control-panel right" id="routineControls">
-    <div class="control-group">
-      <h3><i class="fas fa-project-diagram"></i> Routine Controls</h3>
-      <div class="button-row">
-        <button class="control-button" id="capturePosition">
-          <i class="fas fa-camera"></i>
-          <span>Capture</span>
-        </button>
-        <button class="control-button" id="startRoutine">
-          <i class="fas fa-play"></i>
-          <span>Start</span>
-        </button>
-      </div>
-      <div class="button-row">
-        <button class="control-button" id="stopRoutine">
-          <i class="fas fa-stop"></i>
-          <span>Stop</span>
-        </button>
-        <button class="control-button" id="resetRoutine">
-          <i class="fas fa-trash-alt"></i>
-          <span>Reset</span>
-        </button>
-      </div>
-      <div class="button-row">
-        <button class="control-button" id="replayRoutine">
-          <i class="fas fa-redo"></i>
-          <span>Replay</span>
-        </button>
+    <div class="panel-header">
+      <h2><i class="fas fa-project-diagram"></i> Routine Controls</h2>
+      <i class="fas fa-chevron-up collapse-icon"></i>
+    </div>
+    <div class="panel-content">
+      <div class="control-group">
+        <div class="button-row">
+          <button class="control-button" id="capturePosition">
+            <i class="fas fa-camera"></i>
+            <span>Capture</span>
+          </button>
+          <button class="control-button" id="startRoutine">
+            <i class="fas fa-play"></i>
+            <span>Start</span>
+          </button>
+        </div>
+        <div class="button-row">
+          <button class="control-button" id="stopRoutine">
+            <i class="fas fa-stop"></i>
+            <span>Stop</span>
+          </button>
+          <button class="control-button" id="resetRoutine">
+            <i class="fas fa-trash-alt"></i>
+            <span>Reset</span>
+          </button>
+        </div>
+        <div class="button-row">
+          <button class="control-button" id="replayRoutine">
+            <i class="fas fa-redo"></i>
+            <span>Preset</span>
+          </button>
+        </div>
+        <div class="button-row">
+            <button class="control-button" id="saveRoutine">
+              <i class="fas fa-save"></i>
+              <span>Save</span>
+            </button>
+            <button class="control-button" id="loadRoutine">
+              <i class="fas fa-folder-open"></i>
+              <span>Load</span>
+            </button>
+        </div>
       </div>
     </div>
   </div>
   
   <div class="control-panel bottom-right" id="cameraControls">
-    <div class="control-group">
-      <h3><i class="fas fa-video"></i> Camera Views</h3>
-      <div class="button-row">
-        <button class="control-button" id="defaultView">
-          <i class="fas fa-globe"></i>
-          <span>Default</span>
-        </button>
+    <div class="panel-header">
+      <h2><i class="fas fa-video"></i> Camera Views</h2>
+      <i class="fas fa-chevron-up collapse-icon rotated"></i>
+    </div>
+    <div class="panel-content collapsed">
+      <div class="control-group">
+        <div class="button-row">
+          <button class="control-button" id="defaultView">
+            <i class="fas fa-globe"></i>
+            <span>Default</span>
+          </button>
+        </div>
+        <div class="button-row">
+          <button class="control-button" id="frontView">
+            <i class="fas fa-arrow-up"></i>
+            <span>Front</span>
+          </button>
+          <button class="control-button" id="topView">
+            <i class="fas fa-arrow-down"></i>
+            <span>Top</span>
+          </button>
+        </div>
+        <div class="button-row">
+          <button class="control-button" id="sideView">
+            <i class="fas fa-arrow-right"></i>
+            <span>Side</span>
+          </button>
+        </div>
       </div>
-      <div class="button-row">
-        <button class="control-button" id="frontView">
-          <i class="fas fa-arrow-up"></i>
-          <span>Front</span>
-        </button>
-        <button class="control-button" id="topView">
-          <i class="fas fa-arrow-down"></i>
-          <span>Top</span>
-        </button>
+    </div>
+  </div>
+
+  <div class="control-panel bottom-left" id="kinematicsControls">
+    <div class="panel-header">
+      <h2><i class="fas fa-arrows-alt"></i> Kinematics Controls</h2>
+      <i class="fas fa-chevron-up collapse-icon rotated"></i>
+    </div>
+    <div class="panel-content collapsed">
+      <div class="control-group">
+        <h3><i class="fas fa-arrows-alt"></i> Forward Kinematics (FK)</h3>
+        <div class="button-row">
+          <button class="control-button" id="calculateFK">
+            <i class="fas fa-calculator"></i>
+            <span>Calculate FK</span>
+          </button>
+        </div>
+        <div class="slider-container">
+          <div class="slider-label">
+            <span>X: <span id="fkXValue">0.00</span></span>
+            <span>Y: <span id="fkYValue">0.00</span></span>
+            <span>Z: <span id="fkZValue">0.00</span></span>
+          </div>
+        </div>
       </div>
-      <div class="button-row">
-        <button class="control-button" id="sideView">
-          <i class="fas fa-arrow-right"></i>
-          <span>Side</span>
-        </button>
+
+      <div class="control-group">
+        <h3><i class="fas fa-crosshairs"></i> Inverse Kinematics (IK)</h3>
+        <div class="slider-container">
+          <div class="slider-label">
+            <span>Target X</span>
+            <span><span id="ikTargetXValue">0.00</span></span>
+          </div>
+          <input type="range" min="-100" max="100" step="1" value="0" class="slider" id="ikTargetX">
+        </div>
+        <div class="slider-container">
+          <div class="slider-label">
+            <span>Target Y</span>
+            <span><span id="ikTargetYValue">0.00</span></span>
+          </div>
+          <input type="range" min="0" max="200" step="1" value="100" class="slider" id="ikTargetY">
+        </div>
+        <div class="slider-container">
+          <div class="slider-label">
+            <span>Target Z</span>
+            <span><span id="ikTargetZValue">0.00</span></span>
+          </div>
+          <input type="range" min="-100" max="100" step="1" value="0" class="slider" id="ikTargetZ">
+        </div>
+        <div class="button-row">
+          <button class="control-button" id="solveIK">
+            <i class="fas fa-magic"></i>
+            <span>Solve IK</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -480,6 +617,11 @@
       components.gripLinkRight1 = createBox("gripLinkRight1", { width: 0.5, height: 0.5, depth: 2 }, new BABYLON.Vector3(-0.5, 0, 0), components.gripperbase, scene);
       components.gripLinkRight2 = createBox("gripLinkRight2", { width: 0.5, height: 0.5, depth: 2 }, new BABYLON.Vector3(-0.5, 0, 0), components.gripperbase, scene);
       
+      // End effector representation (for IK target visualization)
+      components.endEffector = BABYLON.MeshBuilder.CreateSphere("endEffector", { diameter: 5 }, scene);
+      components.endEffector.material = createMaterial(scene, new BABYLON.Color3(1, 0, 0)); // Red for visibility
+      components.endEffector.isPickable = false; // So it doesn't interfere with camera controls
+      components.endEffector.visibility = 0.5; // Make it semi-transparent
 
       return components;
     };
@@ -562,7 +704,8 @@
             gripLinkLeft1: { x: components.gripLinkLeft1.rotation.x, y: components.gripLinkLeft1.rotation.y, z: components.gripLinkLeft1.rotation.z },
             gripLinkLeft2: { x: components.gripLinkLeft2.rotation.x, y: components.gripLinkLeft2.rotation.y, z: components.gripLinkLeft2.rotation.z },
             gripLinkRight1: { x: components.gripLinkRight1.rotation.x, y: components.gripLinkRight1.rotation.y, z: components.gripLinkRight1.rotation.z },
-            gripLinkRight2: { x: components.gripLinkRight2.rotation.x, y: components.gripLinkRight2.rotation.y, z: components.gripLinkRight2.rotation.z }
+            gripLinkRight2: { x: components.gripLinkRight2.rotation.x, y: components.gripLinkRight2.rotation.y, z: components.gripLinkRight2.rotation.z },
+            grip: { x: components.grip.rotation.x, y: components.grip.rotation.y, z: components.grip.rotation.z } // Capture grip rotation too
         };
         servoRotations.push(capturedState);
         updateStatus(`Position captured (Step ${servoRotations.length})`);
@@ -608,15 +751,16 @@
         }
 
         const targetRotations = servoRotations[currentRoutineStep];
-        const componentsToAnimate = [
-            "waist", "servo01", "servo02", "servo03", "servo04", "servo05",
-            "gearl", "gearr", "gripLinkLeft1", "gripLinkLeft2", "gripLinkRight1", "gripLinkRight2", "gear1", "gear2"
-        ];
+        
+        // Dynamically get the list of components to animate from the current step's keys
+        const componentsToAnimate = Object.keys(targetRotations);
 
         const startRotations = {};
         componentsToAnimate.forEach(name => {
             const mesh = components[name];
-            startRotations[name] = new BABYLON.Vector3(mesh.rotation.x, mesh.rotation.y, mesh.rotation.z);
+            if (mesh) { // Ensure mesh exists
+                startRotations[name] = new BABYLON.Vector3(mesh.rotation.x, mesh.rotation.y, mesh.rotation.z);
+            }
         });
 
         let startTime = null;
@@ -637,20 +781,10 @@
                 const startRot = startRotations[name];
                 const targetRot = targetRotations[name];
 
-                mesh.rotation.x = startRot.x + (targetRot.x - startRot.x) * progress;
-                mesh.rotation.y = startRot.y + (targetRot.y - startRot.y) * progress;
-                mesh.rotation.z = startRot.z + (targetRot.z - startRot.z) * progress;
-
-                if (name === "servo04") {
-                    components.grip.rotation.x = mesh.rotation.x;
-                } else if (name === "servo05") {
-                    const targetZ = targetRot.z;
-                    const startZ = startRot.z;
-                    
-                    const deltaZ = (targetZ - startZ) * progress;
-
-                    components.gearl.rotation.z = startRot.z - deltaZ;
-                    components.gearr.rotation.z = startRot.z + deltaZ;
+                if (mesh && startRot && targetRot) { // Ensure all necessary objects exist
+                    mesh.rotation.x = startRot.x + (targetRot.x - startRot.x) * progress;
+                    mesh.rotation.y = startRot.y + (targetRot.y - startRot.y) * progress;
+                    mesh.rotation.z = startRot.z + (targetRot.z - startRot.z) * progress;
                 }
             });
 
@@ -674,6 +808,154 @@
         } else {
             updateStatus("Routine already running", true);
         }
+    };
+
+    // Helper function to get a random float within a range
+    const getRandomFloat = (min, max) => Math.random() * (max - min) + min;
+
+    // Function to generate a random coherent routine
+    const generateRandomRoutine = () => {
+        const numSteps = 5; // Number of random steps in the routine
+        const randomRoutine = [];
+
+        // Define limits for each joint based on slider ranges (radians)
+        // Ensure these match the actual slider min/max in the HTML
+        const limits = {
+            waist: { min: -3.14, max: 3.14 },
+            servo01: { min: -0.2, max: 1.0 }, // Adjusted to reduce chances of ground/self-collision
+            servo02: { min: -1.0, max: 0.5 }, // Adjusted to reduce chances of ground/self-collision
+            servo03: { min: -1.5, max: 1.5 }, 
+            servo04: { min: -1.5, max: 1.5 }, // gripPitch (affects grip.x)
+            servo05: { min: -0.5, max: 0.5 }, // gripperOpenClose (affects gearl.z and gearr.z)
+            gear1: { min: -1.0, max: 1.0 },   // gear (affects gear2.z)
+            gripLinkLeft1: { min: -0.5, max: 0.5 }, // Directly controlled
+            gripLinkLeft2: { min: -0.5, max: 0.5 }, // Directly controlled
+            gripLinkRight1: { min: -0.5, max: 0.5 }, // Directly controlled
+            gripLinkRight2: { min: -0.5, max: 0.5 } // Directly controlled
+        };
+
+        for (let i = 0; i < numSteps; i++) {
+            const currentServo04X = getRandomFloat(limits.servo04.min, limits.servo04.max);
+            const currentServo05Z = getRandomFloat(limits.servo05.min, limits.servo05.max);
+            const currentGear1Z = getRandomFloat(limits.gear1.min, limits.gear1.max);
+            const currentGripLinkLeft1Z = getRandomFloat(limits.gripLinkLeft1.min, limits.gripLinkLeft1.max);
+            const currentGripLinkLeft2Z = getRandomFloat(limits.gripLinkLeft2.min, limits.gripLinkLeft2.max);
+            const currentGripLinkRight1Z = getRandomFloat(limits.gripLinkRight1.min, limits.gripLinkRight1.max);
+            const currentGripLinkRight2Z = getRandomFloat(limits.gripLinkRight2.min, limits.gripLinkRight2.max);
+
+
+            const step = {
+                waist: { x: 0, y: getRandomFloat(limits.waist.min, limits.waist.max), z: 0 },
+                servo01: { x: getRandomFloat(limits.servo01.min, limits.servo01.max), y: 0, z: 0 },
+                servo02: { x: getRandomFloat(limits.servo02.min, limits.servo02.max), y: 0, z: 0 },
+                servo03: { x: 0, y: 0, z: getRandomFloat(limits.servo03.min, limits.servo03.max) },
+                servo04: { x: currentServo04X, y: 0, z: 0 },
+                servo05: { x: 0, y: 0, z: currentServo05Z },
+                
+                // Dependent rotations:
+                grip: { x: currentServo04X, y: 0, z: 0 }, // grip.x matches servo04.x
+                gearl: { x: 0, y: 0, z: currentServo05Z }, 
+                gearr: { x: 0, y: 0, z: -currentServo05Z }, // gearr.z is inverse of servo05.z, as per existing logic
+                gear1: { x: 0, y: 0, z: currentGear1Z },
+                gear2: { x: 0, y: 0, z: -currentGear1Z }, // gear2.z is inverse of gear1.z
+
+                // Independent grip links
+                gripLinkLeft1: { x: 0, y: 0, z: currentGripLinkLeft1Z },
+                gripLinkLeft2: { x: 0, y: 0, z: currentGripLinkLeft2Z },
+                gripLinkRight1: { x: 0, y: 0, z: currentGripLinkRight1Z },
+                gripLinkRight2: { x: 0, y: 0, z: currentGripLinkRight2Z }
+            };
+            randomRoutine.push(step);
+        }
+        return randomRoutine;
+    };
+
+    // Function to generate and immediately play a random routine
+    const generateAndPlayRandomRoutine = (components) => {
+        stopRoutine(); // Stop any currently running routine
+        servoRotations.length = 0; // Clear existing routine
+
+        const newRandomRoutine = generateRandomRoutine();
+        servoRotations.push(...newRandomRoutine); // Add random steps
+
+        if (servoRotations.length > 0) {
+            startRoutine(components);
+            updateStatus(`Generated and started a random routine with ${servoRotations.length} steps.`);
+        } else {
+            updateStatus("Failed to generate a random routine.", true);
+        }
+    };
+
+
+    // Function to generate a filename with current date and time
+    const generateFilename = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        return `routine_${year}-${month}-${day}_${hours}-${minutes}-${seconds}.json`;
+    };
+
+    // Function to save routine to JSON
+    const saveRoutineToJson = () => {
+        if (servoRotations.length === 0) {
+            updateStatus("No routine recorded to save.", true);
+            return;
+        }
+
+        const jsonContent = JSON.stringify(servoRotations, null, 2);
+        const blob = new Blob([jsonContent], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = generateFilename();
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        updateStatus("Routine saved successfully!");
+    };
+
+    // Function to load routine from JSON
+    const loadRoutineFromJson = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+
+        input.onchange = (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const loadedData = JSON.parse(e.target.result);
+                    // Basic validation: ensure it's an array and contains expected structure
+                    if (Array.isArray(loadedData) && loadedData.every(step => 
+                        typeof step === 'object' && step !== null && 
+                        'waist' in step && 'servo01' in step // Add more checks for other components if needed
+                    )) {
+                        stopRoutine(); // Stop any running routine
+                        servoRotations.length = 0; // Clear current routine
+                        servoRotations.push(...loadedData); // Load new routine
+                        currentRoutineStep = 0; // Reset routine step
+                        updateStatus(`Routine loaded successfully! ${servoRotations.length} steps.`);
+                    } else {
+                        updateStatus("Invalid JSON format for routine.", true);
+                    }
+                } catch (error) {
+                    updateStatus("Error parsing JSON file: " + error.message, true);
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click(); // Open file selection dialog
     };
 
     // Transition function for camera
@@ -705,11 +987,6 @@
             "targetZAnim", camera.target, "z", frameRate, animationDuration,
             camera.target.z, preset.target.z, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
         );
-    };
-
-    // Function to perform a single step rotation - NOT USED WITH SLIDERS
-    const performStepRotation = (components, target, axis, direction) => {
-        // This function is no longer needed with sliders directly controlling rotation
     };
 
     // Keyboard controls setup
@@ -771,7 +1048,153 @@
       });
     };
 
-    // Configuración de controles HTML
+    // Kinematics calculations (New functions)
+    const calculateFK = (components) => {
+        // To accurately calculate FK, we need the exact lengths of the arm segments
+        // and the pivot points. For this example, we'll use simplified lengths
+        // based on your initial model setup.
+        // These values are approximate and may need fine-tuning with precise model measurements.
+        const L1 = 3; // Length of Arm 1 (distance from servo01 to servo02's parent position)
+        const L2 = 3; // Length of Arm 2 (distance from servo02 to servo03's parent position)
+        const L3 = 1; // Length of Arm 3 (distance from servo03 to gripper base)
+
+        // Get current rotations
+        const theta1 = components.waist.rotation.y; // Waist rotation (around Y)
+        const phi1 = components.servo01.rotation.x; // Arm 1 rotation (around X)
+        const phi2 = components.servo02.rotation.x; // Arm 2 rotation (around X)
+        const phi3 = components.servo03.rotation.z; // Arm 3 rotation (around Z) (assuming pitch)
+
+        // Start from a base point, for simplicity we'll assume the base is at (0, 0, 0)
+        // and the first servo is at some height above it.
+        // We need to account for the position of servo01 relative to the global origin.
+        // The Y position of the base is 0.1, and the servo01 is at [-10, 95, 14] relative to the waist.
+        // We'll calculate relative to the base, and then convert to world coordinates.
+
+        // Initial position (origin of the first arm segment, relative to the base)
+        let currentX = 0;
+        let currentY = 0;
+        let currentZ = 0;
+
+        // Waist rotation (around Y axis)
+        // This affects the X and Z coordinates
+        const waistRotationMatrix = BABYLON.Matrix.RotationY(theta1);
+
+        // Arm 1 (phi1 rotation around its local X axis)
+        // For simplicity, assuming Arm1 extends mainly in Y when rotation is 0.
+        // Let's consider the arm segments as lines.
+        // The rotation is applied to the child, affecting its position relative to the parent.
+
+        // We need to transform the local positions to world positions.
+        // The simplest way to get the end-effector position is to get the world matrix
+        // of the gripper or end-effector mesh.
+        
+        const gripperWorldPosition = components.gripper.absolutePosition; // Using components.gripper which is the tip
+        
+        document.getElementById("fkXValue").innerText = gripperWorldPosition.x.toFixed(2);
+        document.getElementById("fkYValue").innerText = gripperWorldPosition.y.toFixed(2);
+        document.getElementById("fkZValue").innerText = gripperWorldPosition.z.toFixed(2);
+        updateStatus("Forward Kinematics calculated.");
+
+        // Update the end-effector sphere position
+        components.endEffector.position.copyFrom(gripperWorldPosition);
+    };
+
+
+    const solveIK = (components, targetX, targetY, targetZ) => {
+        // Implement Inverse Kinematics here. This is a complex topic and requires
+        // a specific IK algorithm (e.g., analytical solution for 2-DOF planar arm,
+        // or iterative methods like Jacobian Transpose, Pseudoinverse, or FABRIK for more complex arms).
+
+        // For a simplified 3-link arm in a 2D plane (ignoring wrist pitch and gripper for now),
+        // we can use a basic analytical solution for a 2-link arm and extend it.
+        // Assuming:
+        // - Base (waist) rotates around Y axis for XZ plane positioning.
+        // - Arm 1 (servo01) rotates around X axis.
+        // - Arm 2 (servo02) rotates around X axis.
+        // - Arm 3 (servo03) rotates around Z, which we might simplify or ignore for basic IK.
+
+        const L1 = 120; // Approximate length of Arm 1 (from servo01 pivot to servo02 pivot)
+        const L2 = 120; // Approximate length of Arm 2 (from servo02 pivot to servo03 pivot)
+        const L3 = 80;  // Approximate length from servo03 pivot to gripper tip
+
+        const target = new BABYLON.Vector3(targetX, targetY, targetZ);
+        const basePosition = components.base.absolutePosition; // Or a more precise base pivot
+
+        // Step 1: Calculate Waist Rotation (theta1)
+        // Project target onto the XZ plane relative to the base
+        const targetRelativeToBase = target.subtract(basePosition);
+        const waistRotation = Math.atan2(targetRelativeToBase.x, targetRelativeToBase.z); // atan2(x, z) for rotation around Y
+
+        // Apply waist rotation to the arm's waist
+        components.waist.rotation.y = waistRotation;
+
+        // Step 2: Calculate Arm 1 (phi1) and Arm 2 (phi2) rotations for the 2D plane
+        // Now, we consider the arm in the plane defined by the waist rotation.
+        // Rotate the target point back by the negative waist rotation to effectively
+        // work in the arm's "forward" plane.
+        const rotatedTargetX = target.x * Math.cos(-waistRotation) - target.z * Math.sin(-waistRotation);
+        const rotatedTargetZ = target.x * Math.sin(-waistRotation) + target.z * Math.cos(-waistRotation);
+        // The effective target point for the 2D arm in its "straight" orientation
+        // (y is height, rotatedTargetX is horizontal distance in that plane)
+        const targetY_planar = target.y - components.servo01.absolutePosition.y; // Height relative to servo01's y-position
+        const targetX_planar = Math.sqrt(rotatedTargetX * rotatedTargetX + rotatedTargetZ * rotatedTargetZ); // Horizontal distance
+
+        const D = Math.sqrt(targetX_planar * targetX_planar + targetY_planar * targetY_planar);
+
+        // Check if target is reachable
+        if (D > L1 + L2 + L3) {
+            updateStatus("IK: Target out of reach!", true);
+            return;
+        }
+
+        // Analytical solution for 2-link arm (Arm 1 and Arm 2) to reach a point before Arm 3
+        // Using Law of Cosines
+        const cosPhi2 = (D * D - L1 * L1 - L2 * L2) / (2 * L1 * L2);
+        
+        // Clamp cosPhi2 to valid range [-1, 1] to prevent NaN from acos
+        const clampedCosPhi2 = Math.max(-1, Math.min(1, cosPhi2));
+        const phi2 = Math.acos(clampedCosPhi2); // Angle for Arm 2 (elbow angle)
+
+        const alpha = Math.atan2(targetY_planar, targetX_planar);
+        const beta = Math.acos((L1 * L1 + D * D - L2 * L2) / (2 * L1 * D));
+        
+        const phi1 = alpha - beta; // Angle for Arm 1 (shoulder angle)
+
+        // Apply calculated rotations
+        components.servo01.rotation.x = -phi1; // Assuming rotation around X for shoulder
+        components.servo02.rotation.x = -phi2; // Assuming rotation around X for elbow
+
+        // For Arm 3 (phi3), this is typically wrist pitch or roll.
+        // For a simple point-to-point IK, we might just keep it straight or
+        // try to orient the gripper towards the target if orientation IK is also needed.
+        // For now, let's just keep it at 0 or a default value, or set it to align with the target direction.
+        // This part needs more advanced IK to solve for end-effector orientation.
+        // If we want the gripper to point towards the target:
+        // Calculate the vector from servo03 to target
+        const servo03WorldPosition = components.servo03.absolutePosition;
+        const vectorToTarget = target.subtract(servo03WorldPosition);
+
+        // Transform vectorToTarget into servo03's local coordinate system
+        const invServo03WorldMatrix = components.servo03.getWorldMatrix().invert();
+        const localVectorToTarget = BABYLON.Vector3.TransformNormal(vectorToTarget, invServo03WorldMatrix);
+
+        // The angle to point Arm 3 (components.arm03) towards the target
+        // Assuming arm03 extends along its local Y axis (upwards).
+        // The rotation for servo03 is around Z to "pitch" the arm.
+        const phi3 = Math.atan2(localVectorToTarget.y, localVectorToTarget.x); // Assuming local Y and X determine pitch.
+                                                                                // This might need adjustment based on your model's axes.
+        components.servo03.rotation.z = phi3 - Math.PI/2; // Adjust by PI/2 if arm points along Y when rotation is 0.
+
+        // Update the sliders to reflect the new angles
+        document.getElementById("waistSlider").value = components.waist.rotation.y;
+        document.getElementById("arm1Slider").value = components.servo01.rotation.x;
+        document.getElementById("arm2Slider").value = components.servo02.rotation.x;
+        document.getElementById("arm3Slider").value = components.servo03.rotation.z;
+
+        updateStatus("Inverse Kinematics solved.");
+    };
+
+    // HTML Control Setup (including new IK/FK controls)
     const setupHTMLControls = (components) => {
       // Slider de velocidad
       document.getElementById("speedSlider").addEventListener('input', (e) => {
@@ -799,8 +1222,8 @@
       document.getElementById("gripperOpenCloseSlider").addEventListener('input', (e) => {
         const value = parseFloat(e.target.value);
         components.servo05.rotation.z = value;
-        components.gearl.rotation.z = -value; // Inverse for gearl
-        components.gearr.rotation.z = value; // Direct for gearr
+        components.gearl.rotation.z = value; 
+        components.gearr.rotation.z = -value; 
       });
 
       // New sliders for gears and grip links
@@ -823,13 +1246,65 @@
       document.getElementById("startRoutine").addEventListener('click', () => startRoutine(components));
       document.getElementById("stopRoutine").addEventListener('click', () => stopRoutine());
       document.getElementById("resetRoutine").addEventListener('click', () => resetRotations());
-      document.getElementById("replayRoutine").addEventListener('click', () => startRoutine(components));
+      // Replay button now executes a random routine
+      document.getElementById("replayRoutine").addEventListener('click', () => generateAndPlayRandomRoutine(components));
+
+      // New Save/Load buttons
+      document.getElementById("saveRoutine").addEventListener('click', saveRoutineToJson);
+      document.getElementById("loadRoutine").addEventListener('click', loadRoutineFromJson);
       
       // Controles de cámara
       document.getElementById("defaultView").addEventListener('click', () => transitionCamera(cameraPresets["Default"]));
       document.getElementById("frontView").addEventListener('click', () => transitionCamera(cameraPresets["Front View"]));
       document.getElementById("topView").addEventListener('click', () => transitionCamera(cameraPresets["Top View"]));
       document.getElementById("sideView").addEventListener('click', () => transitionCamera(cameraPresets["Side View"]));
+
+      // FK/IK Controls
+      document.getElementById("calculateFK").addEventListener('click', () => calculateFK(components));
+
+      const ikTargetXSlider = document.getElementById("ikTargetX");
+      const ikTargetYSlider = document.getElementById("ikTargetY");
+      const ikTargetZSlider = document.getElementById("ikTargetZ");
+      const ikTargetXValueSpan = document.getElementById("ikTargetXValue");
+      const ikTargetYValueSpan = document.getElementById("ikTargetYValue");
+      const ikTargetZValueSpan = document.getElementById("ikTargetZValue");
+
+      // Update IK target display and end effector sphere
+      const updateIKTarget = () => {
+          const x = parseFloat(ikTargetXSlider.value);
+          const y = parseFloat(ikTargetYSlider.value);
+          const z = parseFloat(ikTargetZSlider.value);
+          
+          ikTargetXValueSpan.innerText = x.toFixed(2);
+          ikTargetYValueSpan.innerText = y.toFixed(2);
+          ikTargetZValueSpan.innerText = z.toFixed(2);
+
+          components.endEffector.position.set(x, y, z);
+      };
+
+      ikTargetXSlider.addEventListener('input', updateIKTarget);
+      ikTargetYSlider.addEventListener('input', updateIKTarget);
+      ikTargetZSlider.addEventListener('input', updateIKTarget);
+      
+      document.getElementById("solveIK").addEventListener('click', () => {
+          const targetX = parseFloat(ikTargetXSlider.value);
+          const targetY = parseFloat(ikTargetYSlider.value);
+          const targetZ = parseFloat(ikTargetZSlider.value);
+          solveIK(components, targetX, targetY, targetZ);
+      });
+
+      // Initialize IK target sphere position and display
+      updateIKTarget();
+
+      // Collapse/Expand functionality
+      document.querySelectorAll('.panel-header').forEach(header => {
+        header.addEventListener('click', () => {
+          const content = header.nextElementSibling;
+          const icon = header.querySelector('.collapse-icon');
+          content.classList.toggle('collapsed');
+          icon.classList.toggle('rotated');
+        });
+      });
     };
     
     // Main function to create the scene
@@ -842,6 +1317,7 @@
       setupGround(scene);
       
       const armComponents = createArmComponents(scene);
+      armComponents.scene = scene; // Pass the scene to components for FK/IK calculations
       loadSTLModels(scene, armComponents);
       
       setupHTMLControls(armComponents);
